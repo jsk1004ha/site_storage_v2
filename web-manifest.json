@@ -1,0 +1,11 @@
+{
+  "name": "Remember 사이트 보관함",
+  "short_name": "Remember",
+  "lang": "ko",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0064ff",
+  "description": "북마크를 저장하고 읽기 모드로 관리하는 개인 보관함"
+}

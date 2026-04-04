@@ -1,0 +1,31 @@
+# OMX runtime state
+.omx/
+
+# Dependencies
+node_modules/
+
+# Build and coverage outputs
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+tmp_*
+
+# Editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+Desktop.ini

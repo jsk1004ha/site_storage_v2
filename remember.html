@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 사이트 보관함</title>
+  <link rel="stylesheet" href="app-style.css" />
+</head>
+<body data-app-context="web">
+  <header>
+    <h1>기억해둘 사이트 모음</h1>
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="검색어를 입력해주세요" />
+      <select id="sortSelect">
+        <option value="recentAdd">최근 추가</option>
+        <option value="recentVisit">최근 방문</option>
+        <option value="frequent">자주 방문</option>
+      </select>
+    </div>
+    <div id="suggestions"></div>
+    <div id="tagFilters"></div>
+
+    <section class="drive-panel">
+      <div class="drive-head">
+        <h2>Google Drive 동기화</h2>
+        <span id="driveStatus" class="drive-status offline">미연결</span>
+      </div>
+      <div class="drive-actions">
+        <button id="driveConnectBtn" type="button">Google 연결</button>
+        <button id="driveSyncBtn" type="button" class="primary">양방향 동기화</button>
+        <button id="drivePushBtn" type="button">Drive 저장</button>
+        <button id="drivePullBtn" type="button">Drive 불러오기</button>
+      </div>
+      <details class="drive-settings">
+        <summary>OAuth 설정</summary>
+        <label for="googleClientIdInput">Google OAuth Client ID</label>
+        <input id="googleClientIdInput" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+        <div class="drive-settings-actions">
+          <button id="saveGoogleConfigBtn" type="button">Client ID 저장</button>
+          <button id="clearGoogleConfigBtn" type="button">초기화</button>
+        </div>
+        <p>
+          웹과 확장프로그램에서 같은 Client ID를 쓰면 동일한 Drive appDataFolder 파일을 공유합니다.
+        </p>
+      </details>
+    </section>
+  </header>
+
+  <main>
+    <section id="cardsContainer"></section>
+  </main>
+
+  <div class="bottom-utils">
+    <button id="exportBtn">백업</button>
+    <button id="importBtn">복구</button>
+    <button id="bookmarkletBtn">북마클릿</button>
+    <button id="saveCurrentTabBtn">현재 탭 추가</button>
+  </div>
+
+  <div class="bottom-cta">
+    <button id="openSheetBtn">새 사이트 추가하기</button>
+  </div>
+
+  <input type="file" id="importFile" accept="application/json" hidden />
+  <div id="toastContainer"></div>
+
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="sheet" id="sheet">
+      <div class="sheet-header" id="sheetTitle">새 사이트 추가</div>
+      <div class="field-group" id="step1">
+        <label for="siteUrl">URL</label>
+        <input type="url" id="siteUrl" placeholder="https://example.com" required />
+        <div class="sheet-buttons">
+          <button type="button" class="btn-secondary" id="cancelBtn1">취소</button>
+          <button type="button" class="btn-primary" id="nextBtn">다음</button>
+        </div>
+      </div>
+      <div class="field-group" id="step2">
+        <label for="siteName">사이트 이름</label>
+        <input type="text" id="siteName" placeholder="사이트 이름" />
+        <label for="siteTags">태그 (띄어쓰기 또는 쉼표로 구분)</label>
+        <input type="text" id="siteTags" placeholder="예: 개발 디자인" />
+        <label for="siteDesc">메모 (선택)</label>
+        <textarea id="siteDesc" rows="3" placeholder="메모"></textarea>
+        <div class="sheet-buttons">
+          <button type="button" class="btn-secondary" id="backBtn">이전</button>
+          <button type="button" class="btn-primary" id="saveBtn">완료</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

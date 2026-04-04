@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Remember</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="../app-style.css" />
+</head>
+<body data-app-context="extension" data-theme-preset="deep-ocean" class="extension-popup-body">
+  <div class="extension-popup-shell">
+    <header class="extension-popup-topbar">
+      <div class="extension-popup-brand">
+        <span class="material-symbols-outlined">bookmarks</span>
+        <strong>Remember</strong>
+      </div>
+      <button type="button" class="extension-popup-icon" aria-label="검색">
+        <span class="material-symbols-outlined">search</span>
+      </button>
+    </header>
+
+    <main class="extension-popup-main">
+      <section class="extension-current-card">
+        <div class="extension-current-card-accent"></div>
+        <div class="extension-current-card-body">
+          <div class="extension-current-meta">
+            <span>Current Tab</span>
+            <span class="extension-current-status"></span>
+          </div>
+          <h2 id="extensionCurrentTitle">현재 탭을 저장해 컬렉션에 추가하세요</h2>
+          <p id="extensionCurrentUrl">활성 탭 URL을 바로 Remember에 저장할 수 있습니다.</p>
+          <button id="saveCurrentTabBtn" class="extension-save-btn" type="button">
+            <span class="material-symbols-outlined">add_circle</span>
+            Save to Library
+          </button>
+        </div>
+      </section>
+
+      <section class="extension-recent-section">
+        <div class="extension-section-head">
+          <h3>Recent Bookmarks</h3>
+          <span id="resultsCountLabel">0 items</span>
+        </div>
+
+        <div class="extension-toolbar">
+          <div class="search-wrap extension-search-wrap">
+            <span class="search-icon material-symbols-outlined" aria-hidden="true">search</span>
+            <input type="text" id="searchInput" placeholder="Search archive..." />
+          </div>
+          <div class="extension-toolbar-actions">
+            <select id="sortSelect" aria-label="정렬 기준">
+              <option value="recentAdd">최근 추가</option>
+              <option value="recentVisit">최근 방문</option>
+              <option value="frequent">자주 방문</option>
+            </select>
+            <button id="openSettingsBtn" type="button" class="extension-popup-icon" aria-label="설정">
+              <span class="material-symbols-outlined">settings</span>
+            </button>
+          </div>
+        </div>
+
+        <section id="bulkBar" class="bulk-bar extension-bulk-bar" hidden>
+          <div class="bulk-bar-top">
+            <div class="bulk-summary">
+              <span id="bulkCount">0개 선택됨</span>
+              <small id="bulkSelectionHint">선택 항목을 빠르게 정리합니다.</small>
+            </div>
+            <div class="bulk-actions-row">
+              <button id="bulkToggleVisibleBtn" type="button">전체 선택</button>
+              <button id="bulkDeleteBtn" type="button" class="danger">삭제</button>
+              <button id="bulkClearBtn" type="button">해제</button>
+            </div>
+          </div>
+          <div class="bulk-inline-editors">
+            <label class="bulk-inline-field" for="bulkFolderInput">
+              <span>폴더</span>
+              <input id="bulkFolderInput" type="text" list="folderSuggestions" placeholder="폴더 이동" />
+            </label>
+            <button id="bulkMoveFolderBtn" type="button">Move</button>
+            <label class="bulk-inline-field bulk-inline-field-tags" for="bulkTagsInput">
+              <span>태그</span>
+              <input id="bulkTagsInput" type="text" list="tagSuggestions" placeholder="태그 편집" />
+            </label>
+            <button id="bulkAddTagBtn" type="button">Add</button>
+            <button id="bulkRemoveTagBtn" type="button">Remove</button>
+          </div>
+        </section>
+
+        <section id="cardsContainer" class="extension-cards"></section>
+      </section>
+    </main>
+
+    <footer class="extension-popup-footer">
+      <button type="button" class="extension-footer-link">
+        <span class="material-symbols-outlined">folder</span>
+        Open Dashboard
+      </button>
+      <button id="topbarAddSiteBtn" type="button" class="extension-popup-icon" aria-label="새 사이트 추가">
+        <span class="material-symbols-outlined">add_circle</span>
+      </button>
+    </footer>
+  </div>
+
+  <div id="suggestions" hidden></div>
+  <div id="tagFilters" hidden></div>
+  <div id="folderFilters" hidden></div>
+  <div id="foldersPane" hidden></div>
+  <div id="sideBackdrop" hidden></div>
+  <div id="tagsPane" hidden></div>
+  <button id="openSidePanelBtn" type="button" hidden></button>
+  <button id="closeSidePanelBtn" type="button" hidden></button>
+  <button id="showFolderPaneBtn" type="button" class="active" hidden></button>
+  <button id="showTagPaneBtn" type="button" hidden></button>
+  <input id="tagSearchInput" type="text" hidden />
+  <select id="folderFilterSelect" hidden><option value="">전체 폴더</option></select>
+  <div id="viewToggle" hidden>
+    <button type="button" data-view-mode="grid" class="active"></button>
+    <button type="button" data-view-mode="list"></button>
+    <button type="button" data-view-mode="magazine"></button>
+  </div>
+  <div id="activeFiltersBar" hidden></div>
+  <span id="resultsContextLabel" hidden>최근 북마크</span>
+  <span id="activeViewBadge" hidden>그리드 보기</span>
+  <button id="clearFiltersBtn" type="button" hidden></button>
+  <div id="facetToggle" hidden></div>
+  <div id="tagPaneBackdrop" hidden></div>
+  <button id="closeTagPaneBtn" type="button" hidden></button>
+  <details id="tagAccordion" hidden></details>
+  <button id="heroAddSiteBtn" type="button" hidden></button>
+  <button id="heroFocusSearchBtn" type="button" hidden></button>
+  <button id="heroOpenSettingsBtn" type="button" hidden></button>
+  <button id="heroBackupBtn" type="button" hidden></button>
+  <button id="heroDriveActionBtn" type="button" hidden></button>
+  <button id="heroCheckLinksBtn" type="button" hidden></button>
+  <button id="heroOpenSettingsPanelBtn" type="button" hidden></button>
+  <button id="heroOpenSettingsPanelBtnSecondary" type="button" hidden></button>
+  <strong id="heroBookmarkCount" hidden>0</strong>
+  <strong id="heroFolderCount" hidden>0</strong>
+  <strong id="heroTagCount" hidden>0</strong>
+  <strong id="heroSyncStatus" hidden>미연결</strong>
+  <small id="heroSyncDetail" hidden></small>
+  <small id="heroSelectionCount" hidden></small>
+  <button id="sidebarSettingsBtn" type="button" hidden></button>
+
+  <div class="settings-overlay" id="settingsOverlay" hidden>
+    <section class="settings-panel extension-settings-panel" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+      <div class="settings-head">
+        <div>
+          <h2 id="settingsTitle">Popup Settings</h2>
+          <p class="settings-subtitle">Choose the popup theme and quick actions.</p>
+        </div>
+        <button id="closeSettingsBtn" type="button" class="settings-close">닫기</button>
+      </div>
+
+      <section class="appearance-panel settings-card">
+        <div class="settings-card-head">
+          <span class="material-symbols-outlined">palette</span>
+          <h3>Theme Preset</h3>
+        </div>
+        <div class="theme-mode-group theme-preset-grid extension-theme-grid" id="themeModeGroup" role="group" aria-label="테마 프리셋">
+          <button type="button" class="theme-mode-btn theme-preset-card" data-theme-preset="deep-ocean">
+            <span class="theme-preset-swatch theme-preset-swatch-ocean" aria-hidden="true"></span>
+            <strong>Deep Ocean</strong>
+            <small>기본 네이비 테마</small>
+          </button>
+          <button type="button" class="theme-mode-btn theme-preset-card" data-theme-preset="glacier">
+            <span class="theme-preset-swatch theme-preset-swatch-glacier" aria-hidden="true"></span>
+            <strong>Glacier</strong>
+            <small>유리질 블루 다크</small>
+          </button>
+          <button type="button" class="theme-mode-btn theme-preset-card" data-theme-preset="solaris">
+            <span class="theme-preset-swatch theme-preset-swatch-solaris" aria-hidden="true"></span>
+            <strong>Solaris</strong>
+            <small>따뜻한 라이트 팝업</small>
+          </button>
+        </div>
+        <p id="themeModeHint" class="theme-mode-hint">현재 Deep Ocean 테마가 적용되어 있습니다.</p>
+      </section>
+
+      <section class="data-panel settings-card">
+        <div class="settings-card-head">
+          <span class="material-symbols-outlined">cloud_sync</span>
+          <h3>Google Drive 동기화</h3>
+        </div>
+        <span id="driveStatus" class="drive-status offline">미연결</span>
+        <div class="drive-actions extension-drive-actions">
+          <button id="driveConnectBtn" type="button">Google 연결</button>
+          <button id="driveSyncBtn" type="button" class="primary">양방향 동기화</button>
+          <button id="drivePushBtn" type="button">Drive 저장</button>
+          <button id="drivePullBtn" type="button">Drive 불러오기</button>
+        </div>
+        <details class="drive-settings">
+          <summary>OAuth 설정</summary>
+          <label for="googleClientIdInput">Google OAuth Client ID</label>
+          <input id="googleClientIdInput" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+          <label for="googleTokenDurationSelect">토큰 만료 기간</label>
+          <select id="googleTokenDurationSelect">
+            <option value="1d">1일</option>
+            <option value="1w" selected>7일</option>
+            <option value="1m">30일</option>
+            <option value="3m">3개월</option>
+            <option value="1y">1년</option>
+          </select>
+          <div class="drive-settings-actions">
+            <button id="saveGoogleConfigBtn" type="button">Client ID 저장</button>
+            <button id="clearGoogleConfigBtn" type="button">초기화</button>
+          </div>
+        </details>
+      </section>
+
+      <section class="folder-style-panel settings-card">
+        <div class="settings-card-head">
+          <span class="material-symbols-outlined">folder_special</span>
+          <h3>Folder Style</h3>
+        </div>
+        <select id="folderStyleTarget"></select>
+        <div class="folder-style-inline">
+          <input id="folderEmojiInput" type="text" maxlength="2" placeholder="아이콘" />
+          <input id="folderColorInput" type="color" value="#1d4ed8" />
+        </div>
+        <div class="folder-style-actions">
+          <button id="saveFolderStyleBtn" type="button">저장</button>
+          <button id="clearFolderStyleBtn" type="button">초기화</button>
+        </div>
+      </section>
+
+      <section class="data-panel settings-card">
+        <div class="settings-card-head">
+          <span class="material-symbols-outlined">database</span>
+          <h3>Data</h3>
+        </div>
+        <div class="data-actions extension-data-actions">
+          <button id="exportBtn" type="button">백업 다운로드</button>
+          <button id="importBtn" type="button">백업 복구</button>
+          <button id="checkDeadLinksBtn" type="button">죽은 링크 검사</button>
+          <button id="deleteBrokenLinksBtn" type="button">죽은 링크 삭제</button>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <div class="bottom-utils" hidden>
+    <button id="bookmarkletBtn" data-tooltip="북마클릿 코드 복사">북마클릿</button>
+  </div>
+  <button id="scrollTopBtn" class="scroll-top-btn" type="button" hidden>
+    <span class="material-symbols-outlined">arrow_upward</span>
+  </button>
+
+  <input type="file" id="importFile" accept="application/json" hidden />
+  <div id="toastContainer"></div>
+
+  <div class="reader-overlay" id="readerOverlay" hidden>
+    <article class="reader-panel">
+      <div class="reader-head">
+        <button id="readerCloseBtn" type="button">닫기</button>
+        <a id="readerOpenOriginal" href="#" target="_blank" rel="noopener noreferrer">원문 열기</a>
+      </div>
+      <h2 id="readerTitle"></h2>
+      <p id="readerSubline"></p>
+      <div id="readerImages" class="reader-images"></div>
+      <div id="readerBody" class="reader-body"></div>
+    </article>
+  </div>
+
+  <div class="sheet-overlay" id="sheetOverlay">
+    <div class="sheet extension-sheet" id="sheet">
+      <div class="sheet-header" id="sheetTitle">새 사이트 추가</div>
+      <div class="sheet-progress" id="sheetProgress">1 / 2 단계 · URL 입력</div>
+      <div class="field-group" id="step1">
+        <label for="siteUrl">URL</label>
+        <input type="url" id="siteUrl" placeholder="https://example.com" required />
+        <div class="sheet-buttons">
+          <button type="button" class="btn-secondary" id="cancelBtn1">취소</button>
+          <button type="button" class="btn-primary" id="nextBtn">다음</button>
+        </div>
+      </div>
+      <div class="field-group" id="step2">
+        <div class="metadata-preview" id="metadataPreview" hidden>
+          <img id="metadataThumb" alt="미리보기 썸네일" />
+          <div class="metadata-preview-text">
+            <div class="metadata-site">
+              <img id="metadataFavicon" alt="" />
+              <span id="metadataDomain"></span>
+            </div>
+            <p id="metadataDescription"></p>
+          </div>
+        </div>
+        <div class="metadata-skeleton" id="metadataSkeleton" hidden>
+          <div class="skeleton-thumb"></div>
+          <div class="skeleton-lines">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+        </div>
+        <p class="metadata-hint" id="metadataHint">1단계에서 URL을 확인하면 2단계에서 제목·폴더·태그를 바로 정리할 수 있어요.</p>
+        <label for="siteName">사이트 이름</label>
+        <input type="text" id="siteName" placeholder="사이트 이름" />
+        <label for="siteFolder">폴더</label>
+        <input type="text" id="siteFolder" placeholder="기본" list="folderSuggestions" />
+        <label for="siteThumbUrl">썸네일 URL</label>
+        <input type="url" id="siteThumbUrl" placeholder="자동 추출" />
+        <label for="siteFaviconUrl">파비콘 URL</label>
+        <input type="url" id="siteFaviconUrl" placeholder="자동 추출" />
+        <label for="siteTags">태그</label>
+        <div class="tag-chip-input" id="siteTagsChipBox">
+          <input type="text" id="siteTagsEditor" placeholder="태그 입력 후 Enter/Space" />
+        </div>
+        <input type="text" id="siteTags" hidden />
+        <label for="siteDesc">메모</label>
+        <textarea id="siteDesc" rows="3" placeholder="메모"></textarea>
+        <div class="sheet-buttons">
+          <button type="button" class="btn-secondary" id="backBtn">이전</button>
+          <button type="button" class="btn-primary" id="saveBtn">완료</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="action-dialog-overlay" id="actionDialogOverlay" hidden>
+    <section class="action-dialog" role="dialog" aria-modal="true" aria-labelledby="actionDialogTitle">
+      <div class="action-dialog-head">
+        <div>
+          <p id="actionDialogEyebrow" class="action-dialog-eyebrow">선택한 항목 작업</p>
+          <h2 id="actionDialogTitle">작업 확인</h2>
+        </div>
+        <button id="actionDialogCloseBtn" type="button" class="action-dialog-close">닫기</button>
+      </div>
+      <p id="actionDialogDescription" class="action-dialog-description"></p>
+      <label id="actionDialogLabel" for="actionDialogInput">입력</label>
+      <input id="actionDialogInput" type="text" />
+      <p id="actionDialogSummary" class="action-dialog-summary"></p>
+      <div class="action-dialog-actions">
+        <button id="actionDialogCancelBtn" type="button" class="btn-secondary">취소</button>
+        <button id="actionDialogConfirmBtn" type="button" class="btn-primary">확인</button>
+      </div>
+    </section>
+  </div>
+
+  <datalist id="folderSuggestions"></datalist>
+  <datalist id="tagSuggestions"></datalist>
+
+  <script src="../app.js"></script>
+</body>
+</html>
