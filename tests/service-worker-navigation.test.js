@@ -20,7 +20,8 @@ function worker({ failWrite = false } = {}) {
   const cache = {
     async put(key, value) {
       if (failWrite) throw new Error("cache quota exceeded");
-      assert.equal(key, "./index.html");
+      const url = new URL(typeof key === "string" ? key : key.url, "https://example.test/remember/service-worker.js");
+      assert.equal(url.pathname, "/remember/index.html");
       shell = value.clone();
       writes += 1;
     },
@@ -36,17 +37,19 @@ function worker({ failWrite = false } = {}) {
   return {
     get writes() { return writes; },
     cachedText: () => shell.clone().text(),
-    async navigate(fetchImpl, pathname = "/remember/index.html") {
+    async navigate(fetchImpl, pathname = "/remember/index.html", mode = "navigate") {
       network = fetchImpl;
       const work = [];
       let response;
       handlers.get("fetch")({
-        request: { method: "GET", mode: "navigate", url: `https://example.test${pathname}` },
+        request: { method: "GET", mode, url: `https://example.test${pathname}` },
         respondWith(promise) { response = promise; },
         waitUntil(promise) { work.push(promise); },
       });
       const result = await response;
       await Promise.all(work);
+      // Drain the non-navigation stale-while-revalidate branch as well.
+      await new Promise((resolve) => setImmediate(resolve));
       return result;
     },
   };
@@ -95,3 +98,16 @@ test("cache storage failure still returns the successful online document", async
   assert.equal(await result.text(), "online app");
   assert.equal(await sw.cachedText(), "working app shell");
 });
+
+for (const [name, response] of [
+  ["JSON", () => new Response('{"error":"wrong document"}', { headers: { "content-type": "application/json" } })],
+  ["redirect", () => html("sign in", 200, "https://example.test/login", true)],
+  ["HTML", () => html("prefetched document")],
+]) {
+  test(`a non-navigation ${name} fetch cannot bypass app shell validation`, async () => {
+    const sw = worker();
+    await sw.navigate(async () => response(), "/remember/index.html", "cors");
+    assert.equal(await sw.cachedText(), "working app shell");
+    assert.equal(sw.writes, 0);
+  });
+}

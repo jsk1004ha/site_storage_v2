@@ -84,7 +84,9 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
         .then((response) => {
-          if (response && response.ok) {
+          // Only validated navigation responses may update an app entry. A
+          // fetch/prefetch of index.html must not bypass the shell checks above.
+          if (response && response.ok && !isAppEntry(requestUrl)) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
           }
           return response;
