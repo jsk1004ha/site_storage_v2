@@ -1,6 +1,13 @@
 "use strict";
 
-const CACHE_NAME = "remember-web-cache-v1";
+const CACHE_NAME = "remember-web-cache-v2";
+const APP_ROOT_URL = new URL("./", self.location.href);
+const APP_ENTRY_URL = new URL("./index.html", self.location.href);
+
+function isAppEntry(url) {
+  return url.origin === APP_ROOT_URL.origin &&
+    (url.pathname === APP_ROOT_URL.pathname || url.pathname === APP_ENTRY_URL.pathname);
+}
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -51,8 +58,18 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("./index.html", cloned));
+          const contentType = (response.headers.get("content-type") || "").split(";", 1)[0].trim().toLowerCase();
+          if (response.status === 200 && contentType === "text/html" &&
+              !response.redirected && isAppEntry(requestUrl) &&
+              response.url && isAppEntry(new URL(response.url))) {
+            const cloned = response.clone();
+            event.waitUntil(
+              caches.open(CACHE_NAME)
+                .then((cache) => cache.put("./index.html", cloned))
+                // A cache quota/write failure must not discard the online page.
+                .catch(() => {})
+            );
+          }
           return response;
         })
         .catch(async () => {
@@ -67,7 +84,9 @@ self.addEventListener("fetch", (event) => {
     caches.match(event.request).then((cached) => {
       const fetchPromise = fetch(event.request)
         .then((response) => {
-          if (response && response.ok) {
+          // Only validated navigation responses may update an app entry. A
+          // fetch/prefetch of index.html must not bypass the shell checks above.
+          if (response && response.ok && !isAppEntry(requestUrl)) {
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
           }
           return response;
